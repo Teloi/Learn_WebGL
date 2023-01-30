@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>rAF学习</title>
+    <style>
+      #e {
+        width: 100px;
+        height: 100px;
+        background: red;
+        position: absolute;
+        left: 0;
+        top: 0;
+        zoom: 1;
+      }
+      #f {
+        width: 100px;
+        height: 100px;
+        background: red;
+        position: absolute;
+        left: 0;
+        top: 200px;
+        zoom: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="e"></div>
+    <div id="f"></div>
+    <script>
+      // 按屏幕渲染速度移动画面
+      var e = document.getElementById("e");
+      var flag = true;
+      var left = 0;
+      var rafId = null;
+
+      function render() {
+        if (flag == true) {
+          if (left >= 100) {
+            flag = false;
+          }
+          e.style.left = ` ${left++}px`;
+        } else {
+          if (left <= 0) {
+            flag = true;
+          }
+          e.style.left = ` ${left--}px`;
+        }
+      }
+
+      //requestAnimationFrame效果
+      (function animloop(time) {
+        console.log(time, Date.now());
+        render();
+        rafId = requestAnimationFrame(animloop);
+        //如果left等于50 停止动画
+        // if (left == 50) {
+        //   cancelAnimationFrame(rafId);
+        // }
+      })();
+
+      //setInterval效果
+      // setInterval(function(){
+      //     render()
+      // },1000/60)
+    </script>
+    <script>
+      function raf2() {
+        /**
+         * 需求，假设想让一个物体（例如一个矩形或圆球）沿着水平轴（x轴），以每秒10个像素的速度进行移动，那么应该怎么做呢？
+         */
+
+        /**
+       * * 涉及两个基本步骤，让物体进行基于时间（每秒10个像素）的* * 更新，以及更新完后进行显示。
+      *  
+      * 搭建一个最简单的更新与重绘框架。上一节中，在step回调函* * 数中已经计算出了3个以毫秒表示的时间间隔（时间差），即：
+
+      ● 当前时间点与当前HTML应用启动时的时间差timestamp。
+      ● 当前时间点与第一次调用step回调函数时的时间差elapsedMsec。
+      ● 当前时间点与上一次调用step回调函数时的时间差intervalMsec。
+
+      以上3个时间间隔或时间差中最有用的是第3个时间差，特别适合做基于时间的更新。
+      */
+
+        let e = document.getElementById("f");
+        let flag = true;
+        let posX = 0;
+        let speedX = 33; //单位为秒,以每秒10个个像素的速度进行位移
+
+        // 声明一个函数用于更新操作
+        function update(timestamp, elapsedMsec, intervalMsec) {
+          // 参数都是使用毫秒为单位, 而现在的速度都是以秒为单位
+          // 因此需要将毫秒转换为秒来表示
+          let t = intervalMsec / 1000.0;
+          // 线性速度公式: posX = posX + speedX * t;
+          if (flag) {
+            posX += speedX * t;
+          } else {
+            posX -= speedX * t;
+          }
+          console.log("current posX: " + posX);
+        }
+
+        // 渲染
+        // 使用CanvasRenderingContext2D绘图上下文渲染对象进行物体的绘制
+        function render(ctx) {
+          if (flag == true) {
+            if (posX >= 100) {
+              flag = false;
+            }
+            e.style.left = ` ${posX}px`;
+          } else {
+            if (posX <= 0) {
+              flag = true;
+            }
+            e.style.left = ` ${posX}px`;
+          }
+        }
+
+        // 将这两个函数由step函数进行调用，就可以形成一个基本的框架
+
+        // start 记录的是第一次调用step函数的时间点，用于计算与第一次调用step函数的时间差, 以毫秒为单位
+
+        let start = 0;
+
+        // lastTime 记录的是上一次调用step函数的时间点，用于计算两帧之间的时间差， 以毫秒为单位
+        let lastTime = 0;
+        // count 用于记录step函数运行的次数
+        let count = 0;
+
+        /**
+         * step函数用于计算
+         *  1. 获取当前时间点 与 html程序启动时间差: timestamp
+         *  2. 获取当前时间点与第一次调用step时的时间差: elapsedMsec
+         * 3. 获取当前时间点与上一次调用step时的时间差：intervalMsec
+         */
+
+        function step(timestamp) {
+          // 第一次调用本函数时, 设置start和lastTime为timestamp
+
+          if (!start) start = timestamp;
+          if (!lastTime) lastTime = timestamp;
+          // 计算当前时间点与第一次调用step时间点的差
+          let elapsedMsec = timestamp - start;
+          // 计算当前时间点与上一次调用step时间点的差（可以理解两帧之间的时间差）
+          let intervalMsec = timestamp - lastTime;
+          // 记录上一次的时间戳
+          lastTime = timestamp;
+          // 进行基于时间的更新
+          update(timestamp, elapsedMsec, intervalMsec);
+          //调用渲染函数, 目前并没有使用CanvasRenderingContext2D类, 因此设置null
+          render(null);
+          // 使用requestAnimationFrame调用step函数
+          window.requestAnimationFrame(step);
+        }
+
+        // 使用requestAnimationFrame启动step
+        // 而step函数中通过调用requestAnimtionFrame来回调step函数
+        // 从而形成不间断的递归调用,驱动动画不停地运行
+        window.requestAnimationFrame(step);
+      }
+
+      raf2();
+    </script>
+  </body>
+</html>
