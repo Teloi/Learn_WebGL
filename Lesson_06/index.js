@@ -1,7 +1,5 @@
 import { Vector3 } from "./Vector3.js";
 import { Vector2 } from "./Vector2.js";
-import { Matrix3 } from "./Matrix3.js";
-import * as MathUtils from './MathUtils.js';
 
 let c = document.getElementById("c");
 
